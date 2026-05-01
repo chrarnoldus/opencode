@@ -1,8 +1,9 @@
 import { Effect, Option, Schema, Scope } from "effect"
 import { NonNegativeInt } from "@/util/schema"
-import { createReadStream } from "fs"
 import * as path from "path"
+import { Readable } from "stream"
 import { createInterface } from "readline"
+import { Encoding } from "@/util/encoding"
 import * as Tool from "./tool"
 import { AppFileSystem } from "@opencode-ai/core/filesystem"
 import { LSP } from "@/lsp/lsp"
@@ -137,6 +138,10 @@ export const ReadTool = Tool.define(
       }
 
       if (bytes.length === 0) return false
+
+      // UTF-16 BOM: NUL bytes are legitimate, skip the NUL/control-char heuristic
+      if (Encoding.hasUtf16Bom(Buffer.from(bytes.buffer, bytes.byteOffset, bytes.byteLength), bytes.length))
+        return false
 
       let nonPrintableCount = 0
       for (let i = 0; i < bytes.length; i++) {
@@ -296,7 +301,9 @@ export const ReadTool = Tool.define(
 )
 
 async function lines(filepath: string, opts: { limit: number; offset: number }) {
-  const stream = createReadStream(filepath, { encoding: "utf8" })
+  // decode with detected encoding; replaces createReadStream(filepath, { encoding: "utf8" })
+  const encoded = await Encoding.read(filepath)
+  const stream = Readable.from([encoded.text])
   const rl = createInterface({
     input: stream,
     // Note: we use the crlfDelay option to recognize all instances of CR LF
