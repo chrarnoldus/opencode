@@ -15,7 +15,6 @@ import { Bus } from "@/bus"
 import { CrossSpawnSpawner } from "@opencode-ai/core/cross-spawn-spawner"
 import { EditTool } from "@/tool/edit"
 import { Format } from "@/format"
-import { Instance } from "@/project/instance"
 import { Instruction } from "@/session/instruction"
 import { LSP } from "@/lsp/lsp"
 import { MessageID, SessionID } from "@/session/schema"
@@ -23,7 +22,7 @@ import { ReadTool } from "@/tool/read"
 import * as Tool from "@/tool/tool"
 import { Truncate } from "@/tool/truncate"
 import { WriteTool } from "@/tool/write"
-import { provideTmpdirInstance } from "../fixture/fixture"
+import { disposeAllInstances, provideTmpdirInstance } from "../fixture/fixture"
 import { testEffect } from "../lib/effect"
 
 const ctx = {
@@ -38,7 +37,7 @@ const ctx = {
 }
 
 afterEach(async () => {
-  await Instance.disposeAll()
+  await disposeAllInstances()
 })
 
 const it = testEffect(
