@@ -45,8 +45,8 @@ export const WriteTool = Tool.define(
           yield* assertExternalDirectoryEffect(ctx, filepath)
 
           const exists = yield* fs.existsSafe(filepath)
-          // encoding-aware read; Encoding.read strips UTF-8 BOMs so derive the
-          // BOM flag from the detected encoding label instead of the decoded text.
+          // Encoding.read strips UTF-8 BOMs so derive the BOM flag from the
+          // detected encoding label instead of the decoded text.
           const pre = exists ? yield* EncodedIO.read(filepath) : { text: "", encoding: "utf-8" }
           const source = { bom: pre.encoding === "utf-8-bom", text: pre.text, encoding: pre.encoding }
           const next = Bom.split(params.content)
@@ -65,7 +65,6 @@ export const WriteTool = Tool.define(
             },
           })
 
-          // encoding-aware write (mkdirs) replaces fs.writeWithDirs
           yield* EncodedIO.write(filepath, Bom.join(contentNew, desiredBom), source.encoding)
           if (yield* format.file(filepath)) {
             yield* Bom.syncFile(fs, filepath, desiredBom)

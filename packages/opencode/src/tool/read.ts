@@ -300,7 +300,6 @@ export const ReadTool = Tool.define(
 )
 
 async function lines(filepath: string, opts: { limit: number; offset: number }) {
-  // decode with detected encoding; replaces createReadStream(filepath, { encoding: "utf8" })
   const encoded = await Encoding.read(filepath)
   const stream = Readable.from([encoded.text])
   const rl = createInterface({

@@ -313,9 +313,8 @@ interface ApplyPatchFileUpdate {
 export function deriveNewContentsFromChunks(filePath: string, chunks: UpdateFileChunk[]): ApplyPatchFileUpdate {
   // Read original file content
   let originalContent: ReturnType<typeof Bom.split>
-  let encoding: string // track detected encoding for round-trip write
+  let encoding: string
   try {
-    // encoding-aware read replaces readFileSync(filePath, "utf-8").
     // Encoding.readSync strips UTF-8 BOMs so the BOM flag is derived from the encoding label.
     const result = Encoding.readSync(filePath)
     originalContent = { bom: result.encoding === "utf-8-bom", text: result.text }
@@ -349,7 +348,7 @@ export function deriveNewContentsFromChunks(filePath: string, chunks: UpdateFile
     unified_diff: unifiedDiff,
     content: newContent,
     bom: originalContent.bom || next.bom,
-    encoding, // include detected encoding for round-trip write
+    encoding,
   }
 }
 
@@ -537,7 +536,6 @@ export async function applyHunksToFiles(hunks: Hunk[]): Promise<AffectedPaths> {
   for (const hunk of hunks) {
     switch (hunk.type) {
       case "add":
-        // Encoding.write mkdirs recursively
         await Encoding.write(hunk.path, hunk.contents)
         added.push(hunk.path)
         log.info(`Added file: ${hunk.path}`)
@@ -553,7 +551,7 @@ export async function applyHunksToFiles(hunks: Hunk[]): Promise<AffectedPaths> {
         const fileUpdate = deriveNewContentsFromChunks(hunk.path, hunk.chunks)
 
         if (hunk.move_path) {
-          // Handle file move; Encoding.write mkdirs recursively
+          // Handle file move
           await Encoding.write(hunk.move_path, Bom.join(fileUpdate.content, fileUpdate.bom), fileUpdate.encoding)
           await fs.unlink(hunk.path)
           modified.push(hunk.move_path)

@@ -90,8 +90,8 @@ export const EditTool = Tool.define(
             Effect.gen(function* () {
               if (params.oldString === "") {
                 const existed = yield* afs.existsSafe(filePath)
-                // encoding-aware read; Encoding.read strips UTF-8 BOMs so derive the
-                // BOM flag from the detected encoding label instead of the decoded text.
+                // Encoding.read strips UTF-8 BOMs so derive the BOM flag from the
+                // detected encoding label instead of the decoded text.
                 const pre = existed ? yield* EncodedIO.read(filePath) : { text: "", encoding: "utf-8" }
                 const source = { bom: pre.encoding === "utf-8-bom", text: pre.text, encoding: pre.encoding }
                 const next = Bom.split(params.newString)
@@ -108,7 +108,6 @@ export const EditTool = Tool.define(
                     diff,
                   },
                 })
-                // encoding-aware write (mkdirs) replaces afs.writeWithDirs
                 yield* EncodedIO.write(filePath, Bom.join(contentNew, desiredBom), source.encoding)
                 if (yield* format.file(filePath)) {
                   contentNew = yield* Bom.syncFile(afs, filePath, desiredBom)
@@ -124,8 +123,8 @@ export const EditTool = Tool.define(
               const info = yield* afs.stat(filePath).pipe(Effect.catch(() => Effect.succeed(undefined)))
               if (!info) throw new Error(`File ${filePath} not found`)
               if (info.type === "Directory") throw new Error(`Path is a directory, not a file: ${filePath}`)
-              // encoding-aware read; Encoding.read strips UTF-8 BOMs so derive the
-              // BOM flag from the detected encoding label instead of the decoded text.
+              // Encoding.read strips UTF-8 BOMs so derive the BOM flag from the
+              // detected encoding label instead of the decoded text.
               const pre = yield* EncodedIO.read(filePath)
               const source = { bom: pre.encoding === "utf-8-bom", text: pre.text, encoding: pre.encoding }
               contentOld = source.text
@@ -156,7 +155,6 @@ export const EditTool = Tool.define(
                 },
               })
 
-              // encoding-aware write replaces afs.writeWithDirs
               yield* EncodedIO.write(filePath, Bom.join(contentNew, desiredBom), source.encoding)
               if (yield* format.file(filePath)) {
                 contentNew = yield* Bom.syncFile(afs, filePath, desiredBom)
